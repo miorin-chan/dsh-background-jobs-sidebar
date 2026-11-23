@@ -12,7 +12,7 @@ function contentBlockSize(scroller: HTMLElement): number {
   }, 0)
 }
 
-export function observeListSpace(section: HTMLElement): (() => void) | undefined {
+export function observeListSpace(section: HTMLElement, setClipped: (clipped: boolean) => void): (() => void) | undefined {
   // In rc.5 the footer outlet is boxless, inside the actions row and foot.
   const outlet = section.closest('[data-slot="sidebar.footer.action"]')
   const foot = outlet?.parentElement?.parentElement
@@ -22,6 +22,7 @@ export function observeListSpace(section: HTMLElement): (() => void) | undefined
   if (!foot || !column || !scrollport || !header) return
 
   let frame: number | undefined
+  let clipped = false
   let observed = new Set<Element>()
   const sizes = new ResizeObserver(schedule)
   const contents = new MutationObserver(schedule)
@@ -50,12 +51,15 @@ export function observeListSpace(section: HTMLElement): (() => void) | undefined
     // Keep a scrollable row when sessions fill the column and space allows.
     const minimum = Math.min(ROW_HEIGHT, available / 2)
     const limit = Math.floor(Math.max(available - Math.max(0, navigation), minimum))
-    const clipped = limit < LABEL_BOTTOM
-    if (clipped && section.querySelector('.dsh-background-jobs-list')?.contains(document.activeElement)) {
-      header.querySelector('button')?.focus({ preventScroll: true })
+    const nextClipped = limit < LABEL_BOTTOM
+    if (nextClipped !== clipped) {
+      if (nextClipped && section.querySelector('.dsh-background-jobs-list')?.contains(document.activeElement)) {
+        header.querySelector('button')?.focus({ preventScroll: true })
+      }
+      clipped = nextClipped
+      setClipped(clipped)
     }
     section.style.setProperty(LIMIT_PROPERTY, `${clipped ? 0 : limit}px`)
-    section.toggleAttribute('data-list-clipped', clipped)
   }
 
   function schedule() {
@@ -68,6 +72,5 @@ export function observeListSpace(section: HTMLElement): (() => void) | undefined
     contents.disconnect()
     sizes.disconnect()
     section.style.removeProperty(LIMIT_PROPERTY)
-    section.removeAttribute('data-list-clipped')
   }
 }

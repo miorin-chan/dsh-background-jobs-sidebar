@@ -69,10 +69,12 @@ export function JobsSection(props: JobsProps) {
   const id = useId()
   const paneId = useId()
   const section = useRef<HTMLElement>(null)
+  const [listClipped, setListClipped] = useState(false)
   const [{ expanded, roster }, setState] = useState<SectionState>({ expanded: true, roster: { phase: 'loading' } })
+  const listExpanded = expanded && !listClipped
 
   useLayoutEffect(() => {
-    if (section.current !== null) return observeListSpace(section.current)
+    if (section.current !== null) return observeListSpace(section.current, setListClipped)
   }, [])
 
   useEffect(() => {
@@ -110,13 +112,16 @@ export function JobsSection(props: JobsProps) {
 
   const count = roster.phase === 'ready' ? roster.rows.filter(entry => entry.motion !== 'exit').length : undefined
   const title = props.t('heading')
-  return <section ref={section} className="dsh-background-jobs" aria-labelledby={id}>
+  return <section ref={section} className="dsh-background-jobs" aria-labelledby={id}
+    data-list-clipped={listClipped ? '' : undefined}>
     <style>{STYLES}</style>
     <header className="dsh-background-jobs-header">
       <h2 id={id}>
         {count
-          ? <button type="button" className="dsh-background-jobs-heading" aria-expanded={expanded}
-              aria-controls={paneId} onClick={() => setState(state => ({ ...state, expanded: !state.expanded }))}>
+          ? <button type="button" className="dsh-background-jobs-heading" aria-expanded={listExpanded}
+              aria-controls={paneId} aria-disabled={listClipped || undefined} onClick={() => {
+                if (!listClipped) setState(state => ({ ...state, expanded: !state.expanded }))
+              }}>
               <span className="dsh-background-jobs-title" title={title}>{title}</span>
               <span className="dsh-background-jobs-arrow" aria-hidden="true" />
             </button>
@@ -127,7 +132,7 @@ export function JobsSection(props: JobsProps) {
       <span className="dsh-background-jobs-count" aria-live="polite">{count}</span>
     </header>
     <div id={paneId} className="dsh-background-jobs-pane"
-      ref={pane => { if (pane !== null) pane.inert = !expanded && roster.phase === 'ready' }}>
+      ref={pane => { if (pane !== null) pane.inert = !listExpanded && roster.phase === 'ready' }}>
       <div className="dsh-background-jobs-clip">
         {roster.phase === 'ready'
           ? roster.rows.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}
