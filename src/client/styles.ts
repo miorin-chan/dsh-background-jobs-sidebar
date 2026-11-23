@@ -99,9 +99,10 @@ export const STYLES = `
     list-style: none;
     margin: 0;
     padding: 0 2px;
-    max-block-size: min(13rem, 28dvh);
+    max-block-size: var(--dsh-background-jobs-list-limit, min(13rem, 28dvh));
     overflow: auto;
   }
+  .dsh-background-jobs[data-list-clipped] .dsh-background-jobs-list { visibility: hidden; }
   .dsh-background-jobs-row {
     display: flex;
     align-items: start;

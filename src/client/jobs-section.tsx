@@ -7,6 +7,7 @@ import { JOBS_PATH, parseActiveJobs } from '../lib/jobs.js'
 import type { ActiveJob } from '../lib/jobs.js'
 import { reconcileRows } from './job-entries.js'
 import type { JobEntry, JobMotion } from './job-entries.js'
+import { observeListSpace } from './list-space.js'
 import type { NS } from './locale.js'
 import { STYLES } from './styles.js'
 
@@ -67,7 +68,12 @@ function JobRow({ entry: { job, motion }, onMotionEnd, t, useSessions, useWorksp
 export function JobsSection(props: JobsProps) {
   const id = useId()
   const paneId = useId()
+  const section = useRef<HTMLElement>(null)
   const [{ expanded, roster }, setState] = useState<SectionState>({ expanded: true, roster: { phase: 'loading' } })
+
+  useLayoutEffect(() => {
+    if (section.current !== null) return observeListSpace(section.current)
+  }, [])
 
   useEffect(() => {
     const source = new EventSource(JOBS_PATH)
@@ -104,7 +110,7 @@ export function JobsSection(props: JobsProps) {
 
   const count = roster.phase === 'ready' ? roster.rows.filter(entry => entry.motion !== 'exit').length : undefined
   const title = props.t('heading')
-  return <section className="dsh-background-jobs" aria-labelledby={id}>
+  return <section ref={section} className="dsh-background-jobs" aria-labelledby={id}>
     <style>{STYLES}</style>
     <header className="dsh-background-jobs-header">
       <h2 id={id}>
