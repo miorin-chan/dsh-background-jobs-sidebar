@@ -71,12 +71,15 @@ export function JobsSection(props: JobsProps) {
       </h2>
       <span className="dsh-background-jobs-count" aria-live="polite">{count}</span>
     </header>
-    <div id={paneId} hidden={!expanded && state.phase === 'ready'}>
-      {state.phase === 'ready'
-        ? state.jobs.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}>
-          {state.jobs.map(job => <JobRow key={job.id} job={job} {...props} />)}
-        </ul>
-        : <p className="dsh-background-jobs-status" role="status">{props.t(state.phase)}</p>}
+    <div id={paneId} className="dsh-background-jobs-pane"
+      ref={pane => { if (pane !== null) pane.inert = !expanded && state.phase === 'ready' }}>
+      <div className="dsh-background-jobs-clip">
+        {state.phase === 'ready'
+          ? state.jobs.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}>
+            {state.jobs.map(job => <JobRow key={job.id} job={job} {...props} />)}
+          </ul>
+          : <p className="dsh-background-jobs-status" role="status">{props.t(state.phase)}</p>}
+      </div>
     </div>
   </section>
 }

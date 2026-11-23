@@ -42,12 +42,15 @@ export const STYLES = `
     place-items: center;
     color: var(--dsw-alias-label-caption);
   }
+  /* Arrow timing from .arrow in @deepseek-ai/dsh-client-ui-workspace@0.2.2-rc.5,
+     src/client/rows/Rows.module.css. */
   .dsh-background-jobs-arrow::before {
     content: '';
     inline-size: 6px;
     block-size: 8px;
     background: currentColor;
     clip-path: polygon(0 0, 100% 50%, 0 100%);
+    transition: transform 150ms var(--ds-ease-in-out, ease-in-out);
   }
   .dsh-background-jobs-heading:dir(rtl) .dsh-background-jobs-arrow::before { transform: rotate(180deg); }
   .dsh-background-jobs-heading[aria-expanded="true"] .dsh-background-jobs-arrow::before { transform: rotate(90deg); }
@@ -63,6 +66,26 @@ export const STYLES = `
   }
   .dsh-background-jobs-status { padding: 0 12px 4px; }
   .dsh-background-jobs-count { flex: none; font-variant-numeric: tabular-nums; }
+  /* Match the glide and fade timings of AnimatedRows in
+     @deepseek-ai/dsh-client-ui-primitives@0.2.2-rc.5, src/AnimatedRows.tsx. */
+  .dsh-background-jobs-pane {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 200ms ease-out, opacity 100ms ease-out;
+  }
+  .dsh-background-jobs-pane[inert] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  .dsh-background-jobs-clip {
+    min-block-size: 0;
+    min-inline-size: 0;
+    overflow: clip;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dsh-background-jobs-pane,
+    .dsh-background-jobs-arrow::before { transition: none; }
+  }
   .dsh-background-jobs-list {
     list-style: none;
     margin: 0;
