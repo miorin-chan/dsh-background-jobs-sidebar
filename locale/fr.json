@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Tâches en arrière-plan dans la barre latérale",
+    "description": "Affiche les tâches actives de toutes les sessions juste au-dessus du bouton de compte dans la barre latérale gauche."
+  }
+}

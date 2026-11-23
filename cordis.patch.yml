@@ -1,0 +1,3 @@
+- insert:
+    - id: dsh-background-jobs-sidebar
+      name: '@miorin/dsh-background-jobs-sidebar'
