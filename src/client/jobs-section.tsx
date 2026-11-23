@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -8,12 +8,49 @@ import type { ActiveJob } from '../lib/jobs.js'
 import type { NS } from './locale.js'
 import { STYLES } from './styles.js'
 
-type RosterState = { phase: 'loading' | 'unavailable' } | { phase: 'ready', jobs: readonly ActiveJob[] }
+type JobEntry = { job: ActiveJob, motion?: 'enter' | 'exit' }
+type RosterState = { phase: 'loading' | 'unavailable' } | { phase: 'ready', rows: readonly JobEntry[] }
+type SectionState = { expanded: boolean, roster: RosterState }
 
 type JobsProps = Pick<PropsRuntime<'sidebar.footer.action'>, 'useSessions' | 'useWorkspaces'>
   & PropsLocale<typeof NS> & { openSession: (id: SessionId) => void }
 
-function JobRow({ job, t, useSessions, useWorkspaces, openSession }: JobsProps & { job: ActiveJob }) {
+type JobRowProps = JobsProps & {
+  entry: JobEntry
+  onExit: (id: ActiveJob['id']) => void
+}
+
+/** Keep outgoing rows in order while their height transitions to zero. */
+function reconcileRows(previous: readonly JobEntry[], jobs: readonly ActiveJob[]): JobEntry[] {
+  const active = new Map(jobs.map(job => [job.id, job]))
+  const rows = previous.map((entry): JobEntry => {
+    const job = active.get(entry.job.id)
+    if (job === undefined) return { job: entry.job, motion: 'exit' }
+    active.delete(job.id)
+    return { job }
+  })
+  for (const job of active.values()) rows.push({ job, motion: 'enter' })
+  return rows.sort((left, right) => right.job.startedAt - left.job.startedAt)
+}
+
+function JobRow({ entry: { job, motion }, onExit, t, useSessions, useWorkspaces, openSession }: JobRowProps) {
+  const ref = useRef<HTMLLIElement>(null)
+  const exiting = motion === 'exit'
+  useLayoutEffect(() => {
+    const row = ref.current
+    if (row === null) return
+    row.inert = exiting
+    if (!exiting) return
+
+    // A cancelled transition also settles when the user enables reduced motion.
+    let mounted = true
+    const animations = row.getAnimations?.() ?? []
+    void Promise.allSettled(animations.map(animation => animation.finished)).then(() => {
+      if (mounted) onExit(job.id)
+    })
+    return () => { mounted = false }
+  }, [exiting, job.id, onExit])
+
   const owner = job.owner
   const session = useSessions((state: SessionListState) => owner === undefined ? undefined : state.byId[owner]?.displayTitle)
   const archived = useWorkspaces((state: WorkspaceSnapshot) => owner !== undefined && state.archivedSessionIds.includes(owner))
@@ -30,30 +67,52 @@ function JobRow({ job, t, useSessions, useWorkspaces, openSession }: JobsProps &
     </span>
   </>
 
-  return <li data-job-id={job.id}>{owner !== undefined && session && !archived
-    ? <button type="button" className="dsh-background-jobs-row" data-status={job.status}
-      onClick={() => openSession(owner)}>{text}</button>
-    : <div className="dsh-background-jobs-row" data-status={job.status}>{text}</div>}
+  return <li ref={ref} className="dsh-background-jobs-entry" data-job-id={job.id} data-motion={motion}>
+    <div className="dsh-background-jobs-clip">
+      {owner !== undefined && session && !archived
+        ? <button type="button" className="dsh-background-jobs-row" data-status={job.status}
+          onClick={() => openSession(owner)}>{text}</button>
+        : <div className="dsh-background-jobs-row" data-status={job.status}>{text}</div>}
+    </div>
   </li>
 }
 
 export function JobsSection(props: JobsProps) {
   const id = useId()
   const paneId = useId()
-  const [state, setState] = useState<RosterState>({ phase: 'loading' })
-  const [expanded, setExpanded] = useState(true)
+  const [{ expanded, roster }, setState] = useState<SectionState>({ expanded: true, roster: { phase: 'loading' } })
 
   useEffect(() => {
     const source = new EventSource(JOBS_PATH)
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const unavailable = () => setState(state => ({ ...state, roster: { phase: 'unavailable' } }))
     source.onmessage = (event: MessageEvent<string>) => {
       const jobs = parseActiveJobs(event.data)
-      setState(jobs === undefined ? { phase: 'unavailable' } : { phase: 'ready', jobs })
+      if (jobs === undefined) {
+        unavailable()
+        return
+      }
+      const animate = !reducedMotion.matches
+      setState(state => {
+        const rows = animate && state.expanded && state.roster.phase === 'ready'
+          ? reconcileRows(state.roster.rows, jobs)
+          : jobs.map(job => ({ job }))
+        return { ...state, roster: { phase: 'ready', rows } }
+      })
     }
-    source.onerror = () => setState({ phase: 'unavailable' })
+    source.onerror = unavailable
     return () => source.close()
   }, [])
 
-  const count = state.phase === 'ready' ? state.jobs.length : undefined
+  const removeExitedRow = useCallback((id: ActiveJob['id']) => {
+    setState(state => {
+      if (state.roster.phase !== 'ready') return state
+      const rows = state.roster.rows.filter(entry => entry.motion !== 'exit' || entry.job.id !== id)
+      return { ...state, roster: { phase: 'ready', rows } }
+    })
+  }, [])
+
+  const count = roster.phase === 'ready' ? roster.rows.filter(entry => entry.motion !== 'exit').length : undefined
   const title = props.t('heading')
   return <section className="dsh-background-jobs" aria-labelledby={id}>
     <style>{STYLES}</style>
@@ -61,7 +120,7 @@ export function JobsSection(props: JobsProps) {
       <h2 id={id}>
         {count
           ? <button type="button" className="dsh-background-jobs-heading" aria-expanded={expanded}
-              aria-controls={paneId} onClick={() => setExpanded(open => !open)}>
+              aria-controls={paneId} onClick={() => setState(state => ({ ...state, expanded: !state.expanded }))}>
               <span className="dsh-background-jobs-title" title={title}>{title}</span>
               <span className="dsh-background-jobs-arrow" aria-hidden="true" />
             </button>
@@ -72,13 +131,14 @@ export function JobsSection(props: JobsProps) {
       <span className="dsh-background-jobs-count" aria-live="polite">{count}</span>
     </header>
     <div id={paneId} className="dsh-background-jobs-pane"
-      ref={pane => { if (pane !== null) pane.inert = !expanded && state.phase === 'ready' }}>
+      ref={pane => { if (pane !== null) pane.inert = !expanded && roster.phase === 'ready' }}>
       <div className="dsh-background-jobs-clip">
-        {state.phase === 'ready'
-          ? state.jobs.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}>
-            {state.jobs.map(job => <JobRow key={job.id} job={job} {...props} />)}
+        {roster.phase === 'ready'
+          ? roster.rows.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}
+            ref={list => { if (list !== null) list.inert = count === 0 }}>
+            {roster.rows.map(entry => <JobRow key={entry.job.id} entry={entry} onExit={removeExitedRow} {...props} />)}
           </ul>
-          : <p className="dsh-background-jobs-status" role="status">{props.t(state.phase)}</p>}
+          : <p className="dsh-background-jobs-status" role="status">{props.t(roster.phase)}</p>}
       </div>
     </div>
   </section>

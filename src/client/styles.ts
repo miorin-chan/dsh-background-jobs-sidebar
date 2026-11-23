@@ -68,14 +68,22 @@ export const STYLES = `
   .dsh-background-jobs-count { flex: none; font-variant-numeric: tabular-nums; }
   /* Match the glide and fade timings of AnimatedRows in
      @deepseek-ai/dsh-client-ui-primitives@0.2.2-rc.5, src/AnimatedRows.tsx. */
-  .dsh-background-jobs-pane {
+  .dsh-background-jobs-pane,
+  .dsh-background-jobs-entry {
     display: grid;
     grid-template-rows: 1fr;
     transition: grid-template-rows 200ms ease-out, opacity 100ms ease-out;
   }
-  .dsh-background-jobs-pane[inert] {
+  .dsh-background-jobs-pane[inert],
+  .dsh-background-jobs-entry[data-motion="exit"] {
     grid-template-rows: 0fr;
     opacity: 0;
+  }
+  @starting-style {
+    .dsh-background-jobs-entry[data-motion="enter"] {
+      grid-template-rows: 0fr;
+      opacity: 0;
+    }
   }
   .dsh-background-jobs-clip {
     min-block-size: 0;
@@ -84,12 +92,13 @@ export const STYLES = `
   }
   @media (prefers-reduced-motion: reduce) {
     .dsh-background-jobs-pane,
+    .dsh-background-jobs-entry,
     .dsh-background-jobs-arrow::before { transition: none; }
   }
   .dsh-background-jobs-list {
     list-style: none;
     margin: 0;
-    padding: 2px;
+    padding: 0 2px;
     max-block-size: min(13rem, 28dvh);
     overflow: auto;
   }
