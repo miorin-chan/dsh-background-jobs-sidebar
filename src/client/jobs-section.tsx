@@ -5,10 +5,11 @@ import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { JOBS_PATH, parseActiveJobs } from '../lib/jobs.js'
 import type { ActiveJob } from '../lib/jobs.js'
+import { reconcileRows } from './job-entries.js'
+import type { JobEntry, JobMotion } from './job-entries.js'
 import type { NS } from './locale.js'
 import { STYLES } from './styles.js'
 
-type JobEntry = { job: ActiveJob, motion?: 'enter' | 'exit' }
 type RosterState = { phase: 'loading' | 'unavailable' } | { phase: 'ready', rows: readonly JobEntry[] }
 type SectionState = { expanded: boolean, roster: RosterState }
 
@@ -17,39 +18,25 @@ type JobsProps = Pick<PropsRuntime<'sidebar.footer.action'>, 'useSessions' | 'us
 
 type JobRowProps = JobsProps & {
   entry: JobEntry
-  onExit: (id: ActiveJob['id']) => void
+  onMotionEnd: (id: ActiveJob['id'], motion: JobMotion) => void
 }
 
-/** Keep outgoing rows in order while their height transitions to zero. */
-function reconcileRows(previous: readonly JobEntry[], jobs: readonly ActiveJob[]): JobEntry[] {
-  const active = new Map(jobs.map(job => [job.id, job]))
-  const rows = previous.map((entry): JobEntry => {
-    const job = active.get(entry.job.id)
-    if (job === undefined) return { job: entry.job, motion: 'exit' }
-    active.delete(job.id)
-    return { job }
-  })
-  for (const job of active.values()) rows.push({ job, motion: 'enter' })
-  return rows.sort((left, right) => right.job.startedAt - left.job.startedAt)
-}
-
-function JobRow({ entry: { job, motion }, onExit, t, useSessions, useWorkspaces, openSession }: JobRowProps) {
+function JobRow({ entry: { job, motion }, onMotionEnd, t, useSessions, useWorkspaces, openSession }: JobRowProps) {
   const ref = useRef<HTMLLIElement>(null)
-  const exiting = motion === 'exit'
   useLayoutEffect(() => {
     const row = ref.current
     if (row === null) return
-    row.inert = exiting
-    if (!exiting) return
+    row.inert = motion !== undefined
+    if (motion === undefined) return
 
     // A cancelled transition also settles when the user enables reduced motion.
-    let mounted = true
+    let current = true
     const animations = row.getAnimations?.() ?? []
     void Promise.allSettled(animations.map(animation => animation.finished)).then(() => {
-      if (mounted) onExit(job.id)
+      if (current) onMotionEnd(job.id, motion)
     })
-    return () => { mounted = false }
-  }, [exiting, job.id, onExit])
+    return () => { current = false }
+  }, [motion, job.id, onMotionEnd])
 
   const owner = job.owner
   const session = useSessions((state: SessionListState) => owner === undefined ? undefined : state.byId[owner]?.displayTitle)
@@ -104,10 +91,13 @@ export function JobsSection(props: JobsProps) {
     return () => source.close()
   }, [])
 
-  const removeExitedRow = useCallback((id: ActiveJob['id']) => {
+  const finishRowMotion = useCallback((id: ActiveJob['id'], motion: JobMotion) => {
     setState(state => {
       if (state.roster.phase !== 'ready') return state
-      const rows = state.roster.rows.filter(entry => entry.motion !== 'exit' || entry.job.id !== id)
+      const rows = state.roster.rows.flatMap(entry => {
+        if (entry.job.id !== id || entry.motion !== motion) return [entry]
+        return motion === 'exit' ? [] : [{ job: entry.job }]
+      })
       return { ...state, roster: { phase: 'ready', rows } }
     })
   }, [])
@@ -136,7 +126,7 @@ export function JobsSection(props: JobsProps) {
         {roster.phase === 'ready'
           ? roster.rows.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}
             ref={list => { if (list !== null) list.inert = count === 0 }}>
-            {roster.rows.map(entry => <JobRow key={entry.job.id} entry={entry} onExit={removeExitedRow} {...props} />)}
+            {roster.rows.map(entry => <JobRow key={entry.job.id} entry={entry} onMotionEnd={finishRowMotion} {...props} />)}
           </ul>
           : <p className="dsh-background-jobs-status" role="status">{props.t(roster.phase)}</p>}
       </div>
