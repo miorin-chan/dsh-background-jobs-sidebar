@@ -1,7 +1,6 @@
 {
   "name": "@miorin/dsh-background-jobs-sidebar",
   "version": "0.1.0",
-  "private": true,
   "license": "MIT",
   "description": "Shows active jobs from every session directly above the account control in the left sidebar.",
   "type": "module",
@@ -29,10 +28,15 @@
     "AGENTS.md",
     "AGENTS.local.md",
     "docs/README.md",
-    "README.zh.md"
+    "README.zh.md",
+    "CHANGELOG.md"
   ],
   "engines": {
     "dsh": "0.2.2-rc.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "dsh": {
     "bundle": {
