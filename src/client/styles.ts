@@ -44,9 +44,9 @@ export const STYLES = `
     color: var(--dsw-alias-label-tertiary);
     font: inherit;
     text-align: start;
+    cursor: pointer;
     transition: color 100ms ease;
   }
-  button.dsh-background-jobs-heading { cursor: pointer; }
   /* Baseline-align the count with the label, as .fileHeader does in
      src/SearchBlock.module.css of @deepseek-ai/dsh-client-ui-primitives 0.2.2-rc.5. */
   .dsh-background-jobs-label-group {
@@ -81,8 +81,8 @@ export const STYLES = `
   .dsh-background-jobs-heading:dir(rtl) .dsh-background-jobs-arrow > svg { transform: rotate(180deg); }
   .dsh-background-jobs-heading[aria-expanded="true"] .dsh-background-jobs-arrow > svg { transform: rotate(90deg); }
   @media (hover: hover) {
-    button.dsh-background-jobs-heading:not([aria-disabled="true"]):hover,
-    button.dsh-background-jobs-heading:not([aria-disabled="true"]):hover .dsh-background-jobs-arrow {
+    .dsh-background-jobs-heading:not([aria-disabled="true"]):hover,
+    .dsh-background-jobs-heading:not([aria-disabled="true"]):hover .dsh-background-jobs-arrow {
       color: var(--dsw-alias-label-secondary);
     }
   }

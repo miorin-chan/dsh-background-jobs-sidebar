@@ -126,22 +126,22 @@ export function JobsSection(props: JobsProps) {
     <header className="dsh-background-jobs-header">
       <h2 id={id}>
         <Tooltip label={title} side="right" onlyWhenClipped portal>
-          {count
-            ? <button type="button" className="dsh-background-jobs-heading" aria-expanded={listExpanded}
-                aria-controls={paneId} aria-disabled={listClipped || undefined} onClick={() => {
-                  if (!listClipped) setState(state => ({ ...state, expanded: !state.expanded }))
-                }}>
-                {label}
-                <span className="dsh-background-jobs-arrow" aria-hidden="true">
-                  <IconTriangleRightFillRegular size={16} />
-                </span>
-              </button>
-            : <span className="dsh-background-jobs-heading">{label}</span>}
+          {/* The disclosure stays available without jobs, so a collapsed section
+              stays collapsed when the next job starts. */}
+          <button type="button" className="dsh-background-jobs-heading" aria-expanded={listExpanded}
+            aria-controls={paneId} aria-disabled={listClipped || undefined} onClick={() => {
+              if (!listClipped) setState(state => ({ ...state, expanded: !state.expanded }))
+            }}>
+            {label}
+            <span className="dsh-background-jobs-arrow" aria-hidden="true">
+              <IconTriangleRightFillRegular size={16} />
+            </span>
+          </button>
         </Tooltip>
       </h2>
     </header>
     <div id={paneId} className="dsh-background-jobs-pane"
-      ref={pane => { if (pane !== null) pane.inert = !listExpanded && roster.phase === 'ready' }}>
+      ref={pane => { if (pane !== null) pane.inert = !listExpanded }}>
       <div className="dsh-background-jobs-clip">
         {roster.phase === 'ready'
           ? roster.rows.length > 0 && <ul className="dsh-background-jobs-list" tabIndex={0} aria-labelledby={id}
