@@ -118,7 +118,7 @@ export function JobsSection(props: JobsProps) {
   // The trailing edge of sidebar section headers belongs to icon actions.
   const label = <span className="dsh-background-jobs-label-group">
     <span className="dsh-background-jobs-title">{title}</span>
-    <span className="dsh-background-jobs-count" aria-live="polite">{count}</span>
+    <span className="dsh-background-jobs-count" data-active={count !== undefined && count > 0 ? '' : undefined} aria-live="polite">{count}</span>
   </span>
   return <section ref={section} className="dsh-background-jobs" aria-labelledby={id}
     data-list-clipped={listClipped ? '' : undefined}>

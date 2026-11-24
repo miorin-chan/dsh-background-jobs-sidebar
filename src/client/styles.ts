@@ -67,6 +67,7 @@ export const STYLES = `
     flex: none;
     font-variant-numeric: tabular-nums;
   }
+  .dsh-background-jobs-count[data-active] { color: var(--dsw-alias-state-business-primary); }
   .dsh-background-jobs-count:empty { display: none; }
   .dsh-background-jobs-arrow {
     display: inline-grid;
