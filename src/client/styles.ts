@@ -6,66 +6,96 @@ export const STYLES = `
     flex: 0 0 100%;
     min-inline-size: 0;
   }
-  /* Follow the workspace files header in dsh-preview-file-navigation 0.1.0,
-     src/client/index.tsx (sectionCss), with the stronger secondary text token. */
+  /* The header reads as a sidebar section header, like the Files header of
+     dsh-preview-file-navigation 0.1.0, src/client/index.tsx (sectionCss): the label follows
+     .sectionHeader and .sectionLabel in src/client/rows/WorkspaceBrowser.module.css, and the
+     arrow follows .arrow and .chevron in src/client/rows/Rows.module.css, both from
+     @deepseek-ai/dsh-client-ui-workspace 0.2.2-rc.5. Label, count and arrow form one
+     disclosure target, so hover only brightens their color, as .row does in
+     src/DisclosureRow.module.css of @deepseek-ai/dsh-client-ui-primitives 0.2.2-rc.5. */
   .dsh-background-jobs-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
     block-size: 36px;
-    padding-inline: calc(var(--dsh-sidebar-row-padding, 12px) - 5px) var(--dsh-sidebar-row-padding, 12px);
-    color: var(--dsw-alias-label-secondary);
+    min-inline-size: 0;
   }
-  .dsh-background-jobs-header h2 { min-inline-size: 0; margin: 0; font: inherit; }
-  .dsh-background-jobs-heading {
+  .dsh-background-jobs-header h2 {
     display: flex;
+    min-inline-size: 0;
+    max-inline-size: calc(100% - var(--dsh-sidebar-row-padding, 12px) + 5px);
+    margin: 0;
+    margin-inline-start: calc(var(--dsh-sidebar-row-padding, 12px) - 5px);
+    font: inherit;
+  }
+  .dsh-background-jobs-heading {
+    box-sizing: border-box;
+    display: inline-flex;
     align-items: center;
     gap: 3px;
+    min-inline-size: 0;
     max-inline-size: 100%;
     block-size: 24px;
     margin: 0;
     padding: 0;
     padding-inline-start: 4px;
     border: 0;
-    border-radius: var(--dsw-radius-sm);
+    border-radius: 6px;
     background: transparent;
-    color: inherit;
+    color: var(--dsw-alias-label-tertiary);
     font: inherit;
-    line-height: 20px;
     text-align: start;
+    transition: color 100ms ease;
   }
   button.dsh-background-jobs-heading { cursor: pointer; }
+  /* Baseline-align the count with the label, as .fileHeader does in
+     src/SearchBlock.module.css of @deepseek-ai/dsh-client-ui-primitives 0.2.2-rc.5. */
+  .dsh-background-jobs-label-group {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    min-inline-size: 0;
+    line-height: 20px;
+  }
+  .dsh-background-jobs-title {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dsh-background-jobs-count {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .dsh-background-jobs-count:empty { display: none; }
   .dsh-background-jobs-arrow {
     display: inline-grid;
-    flex: 0 0 22px;
+    flex: none;
     place-items: center;
+    inline-size: 22px;
+    block-size: 24px;
     color: var(--dsw-alias-label-caption);
+    transition: color 100ms ease;
   }
-  /* Arrow timing from .arrow in @deepseek-ai/dsh-client-ui-workspace@0.2.2-rc.5,
-     src/client/rows/Rows.module.css. */
-  .dsh-background-jobs-arrow::before {
-    content: '';
-    inline-size: 6px;
-    block-size: 8px;
-    background: currentColor;
-    clip-path: polygon(0 0, 100% 50%, 0 100%);
-    transition: transform 150ms var(--ds-ease-in-out, ease-in-out);
-  }
-  .dsh-background-jobs-heading:dir(rtl) .dsh-background-jobs-arrow::before { transform: rotate(180deg); }
-  .dsh-background-jobs-heading[aria-expanded="true"] .dsh-background-jobs-arrow::before { transform: rotate(90deg); }
+  .dsh-background-jobs-arrow > svg { transition: transform 150ms var(--ds-ease-in-out, ease-in-out); }
+  .dsh-background-jobs-heading:dir(rtl) .dsh-background-jobs-arrow > svg { transform: rotate(180deg); }
+  .dsh-background-jobs-heading[aria-expanded="true"] .dsh-background-jobs-arrow > svg { transform: rotate(90deg); }
   @media (hover: hover) {
-    button.dsh-background-jobs-heading:hover { color: var(--dsw-alias-label-primary); }
-    button.dsh-background-jobs-heading:hover .dsh-background-jobs-arrow { color: inherit; }
+    button.dsh-background-jobs-heading:not([aria-disabled="true"]):hover,
+    button.dsh-background-jobs-heading:not([aria-disabled="true"]):hover .dsh-background-jobs-arrow {
+      color: var(--dsw-alias-label-secondary);
+    }
   }
-  .dsh-background-jobs-status,
-  .dsh-background-jobs-count {
+  .dsh-background-jobs .dsh-background-jobs-heading:focus-visible {
+    outline: var(--dsw-focus-ring-width, 1px) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+    outline-offset: -2px;
+  }
+  .dsh-background-jobs-status {
+    margin: 0;
+    padding: 0 12px 4px;
     color: var(--dsw-alias-label-secondary);
     font-size: 12px;
-    margin: 0;
   }
-  .dsh-background-jobs-status { padding: 0 12px 4px; }
-  .dsh-background-jobs-count { flex: none; font-variant-numeric: tabular-nums; }
   /* Match the glide and fade timings of AnimatedRows in
      @deepseek-ai/dsh-client-ui-primitives@0.2.2-rc.5, src/AnimatedRows.tsx. */
   .dsh-background-jobs-pane,
@@ -93,7 +123,9 @@ export const STYLES = `
   @media (prefers-reduced-motion: reduce) {
     .dsh-background-jobs-pane,
     .dsh-background-jobs-entry,
-    .dsh-background-jobs-arrow::before { transition: none; }
+    .dsh-background-jobs-heading,
+    .dsh-background-jobs-arrow,
+    .dsh-background-jobs-arrow > svg { transition: none; }
   }
   .dsh-background-jobs-list {
     list-style: none;
@@ -134,7 +166,6 @@ export const STYLES = `
     background: var(--dsw-alias-state-warn-primary);
   }
   .dsh-background-jobs-details { flex: 1; min-inline-size: 0; }
-  .dsh-background-jobs-title,
   .dsh-background-jobs-label,
   .dsh-background-jobs-owner {
     display: block;

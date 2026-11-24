@@ -8,7 +8,12 @@ globalThis.window = { __ModuleLoader__: { load(entry) { registration = entry } }
 await import('../client.js')
 
 assert.equal(registration.id, '@miorin/dsh-background-jobs-sidebar')
-const plugin = registration.factory(require)
+// The shell seeds these modules; the primitives are resolved only when the section renders.
+const seeded = new Set(['react', 'react/jsx-runtime', '@deepseek-ai/dsh-client-ui-primitives'])
+const plugin = registration.factory((id: string) => {
+  assert.ok(seeded.has(id), `unexpected client import ${id}`)
+  return id === '@deepseek-ai/dsh-client-ui-primitives' ? {} : require(id)
+})
 const slot = 'sidebar.footer.action'
 
 test('registers the localized sidebar layer and removes its effects on unload', () => {

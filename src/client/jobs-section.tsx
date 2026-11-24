@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { IconTriangleRightFillRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -112,24 +113,32 @@ export function JobsSection(props: JobsProps) {
 
   const count = roster.phase === 'ready' ? roster.rows.filter(entry => entry.motion !== 'exit').length : undefined
   const title = props.t('heading')
+  // The count stays beside the label, as the file header of SearchBlock in
+  // @deepseek-ai/dsh-client-ui-primitives@0.2.2-rc.5 pairs a path with its match count.
+  // The trailing edge of sidebar section headers belongs to icon actions.
+  const label = <span className="dsh-background-jobs-label-group">
+    <span className="dsh-background-jobs-title">{title}</span>
+    <span className="dsh-background-jobs-count" aria-live="polite">{count}</span>
+  </span>
   return <section ref={section} className="dsh-background-jobs" aria-labelledby={id}
     data-list-clipped={listClipped ? '' : undefined}>
     <style>{STYLES}</style>
     <header className="dsh-background-jobs-header">
       <h2 id={id}>
-        {count
-          ? <button type="button" className="dsh-background-jobs-heading" aria-expanded={listExpanded}
-              aria-controls={paneId} aria-disabled={listClipped || undefined} onClick={() => {
-                if (!listClipped) setState(state => ({ ...state, expanded: !state.expanded }))
-              }}>
-              <span className="dsh-background-jobs-title" title={title}>{title}</span>
-              <span className="dsh-background-jobs-arrow" aria-hidden="true" />
-            </button>
-          : <span className="dsh-background-jobs-heading">
-              <span className="dsh-background-jobs-title" title={title}>{title}</span>
-            </span>}
+        <Tooltip label={title} side="right" onlyWhenClipped portal>
+          {count
+            ? <button type="button" className="dsh-background-jobs-heading" aria-expanded={listExpanded}
+                aria-controls={paneId} aria-disabled={listClipped || undefined} onClick={() => {
+                  if (!listClipped) setState(state => ({ ...state, expanded: !state.expanded }))
+                }}>
+                {label}
+                <span className="dsh-background-jobs-arrow" aria-hidden="true">
+                  <IconTriangleRightFillRegular size={16} />
+                </span>
+              </button>
+            : <span className="dsh-background-jobs-heading">{label}</span>}
+        </Tooltip>
       </h2>
-      <span className="dsh-background-jobs-count" aria-live="polite">{count}</span>
     </header>
     <div id={paneId} className="dsh-background-jobs-pane"
       ref={pane => { if (pane !== null) pane.inert = !listExpanded && roster.phase === 'ready' }}>
