@@ -74,7 +74,7 @@ function findElement(node: unknown, match: (element: ElementNode) => boolean): E
   return findElement(element.props?.children, match)
 }
 
-test('marks the header job count with data-active only when active jobs exceed zero', () => {
+test('starts collapsed and highlights the header count when jobs are active', () => {
   const states: unknown[] = []
   const cleanups: (() => void)[] = []
   let hookIndex = 0
@@ -193,8 +193,15 @@ test('marks the header job count with data-active only when active jobs exceed z
       return node.props
     }
 
+    const headingPropsOf = (tree: unknown) => {
+      const node = findElement(tree, element => element.props?.className === 'dsh-background-jobs-heading')
+      assert.ok(node?.props)
+      return node.props
+    }
+
     // Initial loading render.
     const loadingTree = render()
+    assert.equal(headingPropsOf(loadingTree)['aria-expanded'], false)
     const styleNode = findElement(loadingTree, element => element.type === 'style')
     assert.equal(typeof styleNode?.props?.children, 'string')
     assert.match(styleNode!.props!.children as string, /\.dsh-background-jobs-count\[data-active\]\s*\{\s*color:\s*var\(--dsw-alias-state-business-primary\);?\s*\}/)
@@ -215,6 +222,11 @@ test('marks the header job count with data-active only when active jobs exceed z
     const activeTree = render()
     assert.equal(countPropsOf(activeTree).children, 1)
     assert.equal(countPropsOf(activeTree)['data-active'], '')
+    assert.equal(headingPropsOf(activeTree)['aria-expanded'], false)
+
+    const toggle = headingPropsOf(activeTree).onClick as () => void
+    toggle()
+    assert.equal(headingPropsOf(render())['aria-expanded'], true)
 
     // Returns to 0 jobs immediately even while the exiting row stays mounted for its transition.
     sources[0].onmessage?.({ data: '[]' } as MessageEvent<string>)

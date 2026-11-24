@@ -71,7 +71,7 @@ export function JobsSection(props: JobsProps) {
   const paneId = useId()
   const section = useRef<HTMLElement>(null)
   const [listClipped, setListClipped] = useState(false)
-  const [{ expanded, roster }, setState] = useState<SectionState>({ expanded: true, roster: { phase: 'loading' } })
+  const [{ expanded, roster }, setState] = useState<SectionState>({ expanded: false, roster: { phase: 'loading' } })
   const listExpanded = expanded && !listClipped
 
   useLayoutEffect(() => {
