@@ -7,11 +7,10 @@ It shows the jobs and their owners across sessions, including shared jobs.
 Select a row with a known session to open its conversation.
 The list updates as jobs start, begin stopping, and settle.
 
-In DeepSeek Harness `0.2.2-rc.5`, open **Plugins → Add plugin** and enter `@miorin/dsh-atlas-runtime`.
-Open **Runtime Modular Improvement Plan** to enable or disable the sidebar.
-For a standalone installation, enter `@miorin/dsh-background-jobs-sidebar` instead.
-Both bundles use the same plugin row.
-Enable one at a time.
+In DeepSeek Harness `0.2.2-rc.5`, open **Plugins → Add plugin** and enter `@miorin/dsh-background-jobs-sidebar`
+for a standalone installation.
+You can also enable it in the locally installed **List Modular Improvement Plan**.
+Both bundles use the same plugin row, so enable one at a time.
 
 The list follows the same DSH job registry as the session header.
 It also shows foreground commands while DSH tracks them as jobs.
