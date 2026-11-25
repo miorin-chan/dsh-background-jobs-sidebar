@@ -1,6 +1,6 @@
 {
   "name": "@miorin/dsh-background-jobs-sidebar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Shows active jobs from every session directly above the account control in the left sidebar.",
   "type": "module",
@@ -80,5 +80,13 @@
     "esbuild": "0.28.2",
     "react": "18.3.1",
     "typescript": "5.7.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miorin-chan/dsh-background-jobs-sidebar.git"
+  },
+  "homepage": "https://github.com/miorin-chan/dsh-background-jobs-sidebar#readme",
+  "bugs": {
+    "url": "https://github.com/miorin-chan/dsh-background-jobs-sidebar/issues"
   }
 }
