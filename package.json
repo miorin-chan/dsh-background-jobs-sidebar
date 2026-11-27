@@ -34,6 +34,7 @@
     "docs/assets/screenshots/entry-light.png",
     "docs/assets/screenshots/entry-dark.png",
     "README.zh.md",
+    "DESIGN.md",
     "CHANGELOG.md"
   ],
   "engines": {
