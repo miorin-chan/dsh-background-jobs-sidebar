@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "Background jobs sidebar",
-    "description": "Shows active jobs from every session directly above the account control in the left sidebar."
+    "description": "Shows active jobs from every session directly above the account control in the left sidebar.",
+    "detail": "docs/DETAIL.md"
   }
 }
