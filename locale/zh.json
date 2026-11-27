@@ -1,6 +1,7 @@
 {
   "meta": {
     "title": "后台任务侧栏",
-    "description": "在左侧边栏底部、账号控件上方显示所有会话中仍在运行的后台任务。"
+    "description": "在左侧边栏底部、账号控件上方显示所有会话中仍在运行的后台任务。",
+    "detail": "docs/DETAIL.zh.md"
   }
 }
